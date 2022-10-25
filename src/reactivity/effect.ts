@@ -2,7 +2,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-22 21:23:39
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-22 22:13:36
+ * @LastEditTime: 2022-10-25 14:26:50
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -13,7 +13,7 @@ class ReactiveEffect {
     }
     run(){
         activeEffect = this
-        this._fn()
+        return this._fn()
     }
 }
 
@@ -46,4 +46,5 @@ let activeEffect: any;
 export function effect(fn:any){ //effect是一个函数，内部去 new 一个类 ，类的内部保存了传入的函数，并且先调用下传入的函数
   const _effect = new ReactiveEffect(fn)
   _effect.run()
+  return _effect.run.bind(_effect)
 }
