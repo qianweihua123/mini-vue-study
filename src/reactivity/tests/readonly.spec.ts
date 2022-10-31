@@ -2,7 +2,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-31 11:55:06
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-31 17:30:23
+ * @LastEditTime: 2022-10-31 21:06:14
  * @FilePath: /mini-vue-study/src/reactivity/tests/readonly.spec.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -15,6 +15,8 @@ describe("readonly", () => {
     expect(wrapped).not.toBe(original);
     expect(isReadonly(wrapped)).toBe(true);
     expect(isReadonly(original)).toBe(false);
+    expect(isReadonly(wrapped.bar)).toBe(true);
+    expect(isReadonly(original.bar)).toBe(false);
     expect(wrapped.foo).toBe(1);
   });
 

@@ -3,14 +3,14 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-22 21:23:39
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-30 20:44:06
+ * @LastEditTime: 2022-10-31 20:50:38
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { extend } from "./shared";
 
 let activeEffect: any;
-
+let shouldTrack: any
 function cleanupEffect(effect: any) {
     effect.deps.forEach((dep: any) => {
         dep.delete(effect)
@@ -29,24 +29,34 @@ class ReactiveEffect {
         this.scheduler = scheduler;
     }
     run() {
+        if (!this.active) {
+            return this._fn()
+        }
+        shouldTrack = true
         activeEffect = this
-        return this._fn()
+        const result = this._fn()
+        shouldTrack = false
+        return result
+
     }
     stop() {
         if (this.active) {
             cleanupEffect(this)
-            if(this.onStop){
-               this.onStop()
+            if (this.onStop) {
+                this.onStop()
             }
             this.active = false
         }
     }
 }
-
+function isTracking(){
+    return shouldTrack && activeEffect !== undefined
+}
 
 let targetMap = new Map()
 export function track(target: any, key: any) {
     //target -> key ->dep
+    if(!isTracking) return
     let depsMap = targetMap.get(target)
     if (!depsMap) {
         depsMap = new Map()
@@ -57,7 +67,7 @@ export function track(target: any, key: any) {
         dep = new Set()
         depsMap.set(key, dep)
     }
-    if(!activeEffect) return
+    if(dep.has(activeEffect)) return
     dep.add(activeEffect)
     activeEffect?.deps.push(dep)
 
