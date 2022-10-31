@@ -2,16 +2,23 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-31 12:06:27
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-31 12:17:54
+ * @LastEditTime: 2022-10-31 17:32:32
  * @FilePath: /mini-vue-study/src/reactivity/baseHandlers.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { track, trigger } from "./effect"
+import { ReactiveFlags } from "./reactive";
+
 const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true);
 function createGetter(isReadonly: any = false) {
     return function get(target: any, key: any) {
+        if(key === ReactiveFlags.IS_REACTIVE){
+           return !isReadonly;
+        }else if(key === ReactiveFlags.IS_READONLY){
+            return isReadonly;
+        }
         const res = Reflect.get(target, key)
         //依赖收集
         if (!isReadonly) {
