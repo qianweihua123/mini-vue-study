@@ -3,7 +3,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-22 21:23:39
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-01 15:06:47
+ * @LastEditTime: 2022-11-01 15:49:45
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -18,7 +18,7 @@ function cleanupEffect(effect: any) {
     effect.deps.length = 0
 }
 // tdd是先写一个测试，然后让我们的代码通过，然后重构我们的代码保持可读性
-class ReactiveEffect {
+export class ReactiveEffect {
     private _fn: any
     public scheduler: any
     deps = []
