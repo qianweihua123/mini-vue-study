@@ -2,18 +2,19 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-31 12:06:27
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-31 21:07:20
+ * @LastEditTime: 2022-11-01 14:13:17
  * @FilePath: /mini-vue-study/src/reactivity/baseHandlers.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { track, trigger } from "./effect"
 import { reactive, ReactiveFlags, readonly } from "./reactive";
-import { isObject } from "./shared";
+import { extend, isObject } from "./shared";
 
 const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true);
-function createGetter(isReadonly: any = false) {
+const shallowReadonlyGet = createGetter(true,true);
+function createGetter(isReadonly: any = false,shallow = false) {
     return function get(target: any, key: any) {
         if(key === ReactiveFlags.IS_REACTIVE){
            return !isReadonly;
@@ -21,6 +22,9 @@ function createGetter(isReadonly: any = false) {
             return isReadonly;
         }
         const res = Reflect.get(target, key)
+        if(shallow){
+            return res
+        }
         if(isObject(res)){
             return isReadonly? readonly(res): reactive(res)
         }
@@ -56,3 +60,7 @@ export const readonlHandlers = {
         return true
     }
 }
+
+export const shallowReadonlHandlers = extend({},readonlHandlers,{
+    get:shallowReadonlyGet
+})

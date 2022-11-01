@@ -3,7 +3,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-22 21:23:39
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-10-31 20:50:38
+ * @LastEditTime: 2022-11-01 15:06:47
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -49,14 +49,14 @@ class ReactiveEffect {
         }
     }
 }
-function isTracking(){
+export function isTracking() {
     return shouldTrack && activeEffect !== undefined
 }
 
 let targetMap = new Map()
 export function track(target: any, key: any) {
     //target -> key ->dep
-    if(!isTracking) return
+    if (!isTracking()) return
     let depsMap = targetMap.get(target)
     if (!depsMap) {
         depsMap = new Map()
@@ -67,15 +67,24 @@ export function track(target: any, key: any) {
         dep = new Set()
         depsMap.set(key, dep)
     }
-    if(dep.has(activeEffect)) return
+    trackEffect(dep)
+
+}
+
+export function trackEffect(dep: any) {
+    if (dep.has(activeEffect)) return
     dep.add(activeEffect)
     activeEffect?.deps.push(dep)
-
 }
 
 export function trigger(target: any, key: any) {
     let depsMap = targetMap.get(target)
     let dep = depsMap.get(key)
+    triggerEffects(dep)
+
+}
+
+export function triggerEffects(dep: any) {
     for (const effect of dep) {
         if (effect.scheduler) {
             effect.scheduler()
@@ -84,7 +93,6 @@ export function trigger(target: any, key: any) {
         }
 
     }
-
 }
 
 export function effect(fn: any, options: any = {}) { //effect是一个函数，内部去 new 一个类 ，类的内部保存了传入的函数，并且先调用下传入的函数
