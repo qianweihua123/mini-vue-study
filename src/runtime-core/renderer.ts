@@ -4,7 +4,7 @@ import { isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-04 23:10:40
+ * @LastEditTime: 2022-11-05 23:12:49
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -34,18 +34,18 @@ function processComponent(vnode: any, container: any) {
    mountComponent(vnode, container)
 }
 
-function mountComponent(vnode: any, container: any) {
-   const instance = createComponentInstance(vnode)
+function mountComponent(initialVnode: any, container: any) {
+   const instance = createComponentInstance(initialVnode)
    setupComponent(instance) //上面这些都是把组件的信息收集起来
 
    //下面的这个是开箱得到虚拟节点树
-   setupRenderEffect(instance, container)
+   setupRenderEffect(instance,initialVnode, container)
 }
 
 
 
 
-function setupRenderEffect(instance: any, container: any) {
+function setupRenderEffect(instance: any,vnode:any, container: any) {
    //这个 subTree 其实是一个虚拟节点树，
    /**
    * @description 描述
@@ -53,10 +53,17 @@ function setupRenderEffect(instance: any, container: any) {
        return h('div', 'hi,' +this.msg)
     }
    */
-   const subTree = instance.render()
+   const { proxy } = instance;
+   //在执行 render 的时候使用 call指向这个 proxy
+   const subTree = instance.render.call(proxy)
    // vnode -> patch
    //vnode -> element -> mountElement
    patch(subTree, container)
+
+   //在这之后就是所有的 element 都处理好了，patch在传入 subTree 后，
+   //内部也会执行到 mountElement里面会在subTree上挂载 el，el是真实节点
+   //patch 是从上往下执行的，执行完后 subTree 身上的 el 就是一个完整的了得到
+   vnode.el = subTree.el
 }
 
 function processElement(vnode: any, container: any) {
@@ -68,11 +75,12 @@ function mountElement(vnode: any, container: any) {
    console.log(vnode, container, '元素类型');
 
    //创建挂载元素
-   const el = document.createElement(vnode.type)
+   //将创建的真实元素存储到虚拟节点的 el上
+   const el = (vnode.el = document.createElement(vnode.type))
    const { children } = vnode
    if (typeof children === 'string') {
       el.textContent = children
-   } else if(Array.isArray(children)){
+   } else if (Array.isArray(children)) {
       mountChildren(vnode, el)
    }
 
