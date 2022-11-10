@@ -5,7 +5,7 @@ import { isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-07 14:52:50
+ * @LastEditTime: 2022-11-10 14:23:58
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -19,7 +19,6 @@ export function render(vnode: any, container: any) {
 }
 
 function patch(vnode: any, container: any) {
-   console.log(typeof vnode.type, container, '处理 patch');
 
    //如果是组件的话 vnode 上的 type 是一个对象，如果是元素的话 type 是 string(div)
    //我们先处理组件 processComponent
