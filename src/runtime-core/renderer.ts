@@ -5,12 +5,13 @@ import { isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-10 14:23:58
+ * @LastEditTime: 2022-11-10 17:32:46
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
 import { createComponentInstance, setupComponent } from "./component"
+import { Fragment ,Text} from './vnode';
 
 //调用 render 的过程就是一个拆箱的过程
 export function render(vnode: any, container: any) {
@@ -22,15 +23,34 @@ function patch(vnode: any, container: any) {
 
    //如果是组件的话 vnode 上的 type 是一个对象，如果是元素的话 type 是 string(div)
    //我们先处理组件 processComponent
-   const { shapeFlag } = vnode
-   if (shapeFlag & ShapeFlags.ELEMENT) {
-      processElement(vnode, container)
-   } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-      processComponent(vnode, container)
+   console.log(vnode,'vnode',container);
+
+   const { type, shapeFlag } = vnode
+   switch (type) {
+      case Fragment:
+         processFragment(vnode, container)
+         break;
+      case Text:
+         debugger
+         processText(vnode, container)
+         break
+      default:
+         debugger
+         if (shapeFlag & ShapeFlags.ELEMENT) {
+            processElement(vnode, container)
+         } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+            processComponent(vnode, container)
+         }
    }
-
 }
-
+function processText(vnode: any, container: any) {
+   const { children } = vnode;
+   const textNode = (vnode.el) = document.createTextNode(children)
+   container.append(textNode)
+}
+function processFragment(vnode: any, container: any) {
+   mountChildren(vnode, container)
+}
 function processComponent(vnode: any, container: any) {
    mountComponent(vnode, container)
 }
@@ -54,9 +74,11 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
        return h('div', 'hi,' +this.msg)
     }
    */
-   const { proxy } = instance;
+   const { proxy} = instance;
    //在执行 render 的时候使用 call指向这个 proxy
-   const subTree = instance.render.call(proxy)
+   // console.log(proxy,'proxy',instance);
+
+   const subTree = instance.render && instance.render.call(proxy)
    // vnode -> patch
    //vnode -> element -> mountElement
    patch(subTree, container)
@@ -88,10 +110,10 @@ function mountElement(vnode: any, container: any) {
    const { props } = vnode
    for (const key in props) {
       console.log(key);
-      const isOn = (key:string) => /^on[A-Z]/.test(key)
+      const isOn = (key: string) => /^on[A-Z]/.test(key)
       if (isOn(key)) {
          const event = key.slice(2).toLocaleLowerCase()
-         el.addEventListener(event,props[key])
+         el.addEventListener(event, props[key])
       } else {
          el.setAttribute(key, props[key])
       }
