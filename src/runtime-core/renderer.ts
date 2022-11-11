@@ -5,7 +5,7 @@ import { isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-10 17:32:46
+ * @LastEditTime: 2022-11-11 23:03:38
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -14,12 +14,12 @@ import { createComponentInstance, setupComponent } from "./component"
 import { Fragment ,Text} from './vnode';
 
 //调用 render 的过程就是一个拆箱的过程
-export function render(vnode: any, container: any) {
+export function render(vnode: any, container: any,parentComponent:any) {
    //render内部是调用 patch 方法
-   patch(vnode, container)
+   patch(vnode, container,parentComponent)
 }
 
-function patch(vnode: any, container: any) {
+function patch(vnode: any, container: any,parentComponent:any) {
 
    //如果是组件的话 vnode 上的 type 是一个对象，如果是元素的话 type 是 string(div)
    //我们先处理组件 processComponent
@@ -28,7 +28,7 @@ function patch(vnode: any, container: any) {
    const { type, shapeFlag } = vnode
    switch (type) {
       case Fragment:
-         processFragment(vnode, container)
+         processFragment(vnode, container,parentComponent)
          break;
       case Text:
          debugger
@@ -37,9 +37,9 @@ function patch(vnode: any, container: any) {
       default:
          debugger
          if (shapeFlag & ShapeFlags.ELEMENT) {
-            processElement(vnode, container)
+            processElement(vnode, container,parentComponent)
          } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-            processComponent(vnode, container)
+            processComponent(vnode, container,parentComponent)
          }
    }
 }
@@ -48,15 +48,15 @@ function processText(vnode: any, container: any) {
    const textNode = (vnode.el) = document.createTextNode(children)
    container.append(textNode)
 }
-function processFragment(vnode: any, container: any) {
-   mountChildren(vnode, container)
+function processFragment(vnode: any, container: any,parentComponent:any) {
+   mountChildren(vnode, container,parentComponent)
 }
-function processComponent(vnode: any, container: any) {
-   mountComponent(vnode, container)
+function processComponent(vnode: any, container: any,parentComponent:any) {
+   mountComponent(vnode, container,parentComponent)
 }
 
-function mountComponent(initialVnode: any, container: any) {
-   const instance = createComponentInstance(initialVnode)
+function mountComponent(initialVnode: any, container: any,parentComponent:any) {
+   const instance = createComponentInstance(initialVnode,parentComponent)
    setupComponent(instance) //上面这些都是把组件的信息收集起来
 
    //下面的这个是开箱得到虚拟节点树
@@ -81,7 +81,7 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
    const subTree = instance.render && instance.render.call(proxy)
    // vnode -> patch
    //vnode -> element -> mountElement
-   patch(subTree, container)
+   patch(subTree, container,instance)
 
    //在这之后就是所有的 element 都处理好了，patch在传入 subTree 后，
    //内部也会执行到 mountElement里面会在subTree上挂载 el，el是真实节点
@@ -89,12 +89,12 @@ function setupRenderEffect(instance: any, vnode: any, container: any) {
    vnode.el = subTree.el
 }
 
-function processElement(vnode: any, container: any) {
+function processElement(vnode: any, container: any,parentComponent:any) {
    //如果是元素节点那就初始化元素 mountElement(vnode, container)
-   mountElement(vnode, container)
+   mountElement(vnode, container,parentComponent)
 }
 
-function mountElement(vnode: any, container: any) {
+function mountElement(vnode: any, container: any,parentComponent: any) {
    console.log(vnode, container, '元素类型');
 
    //创建挂载元素
@@ -104,7 +104,7 @@ function mountElement(vnode: any, container: any) {
    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children
    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-      mountChildren(vnode, el)
+      mountChildren(vnode, el,parentComponent)
    }
 
    const { props } = vnode
@@ -122,8 +122,8 @@ function mountElement(vnode: any, container: any) {
    container.appendChild(el)
 }
 
-function mountChildren(vnode: any, container: any) {
+function mountChildren(vnode: any, container: any,parentComponent:any) {
    vnode.children.forEach((v: any) => {
-      patch(v, container)
+      patch(v, container,parentComponent)
    })
 }
