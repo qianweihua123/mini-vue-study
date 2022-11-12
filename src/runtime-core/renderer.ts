@@ -5,19 +5,28 @@ import { isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-11 23:03:38
+ * @LastEditTime: 2022-11-12 18:03:23
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
 import { createComponentInstance, setupComponent } from "./component"
+import { createAppAPI } from './createApp';
 import { Fragment ,Text} from './vnode';
-
-//调用 render 的过程就是一个拆箱的过程
-export function render(vnode: any, container: any,parentComponent:any) {
+//此方法可以创建一个渲染器 ,这个 options 就是传入的相关平台元素的操作方法
+export function createRenderer(options:any) {
+   const {
+     createElement: hostCreateElement,
+     patchProp: hostPatchProp,
+     insert: hostInsert,
+   } = options;
+   //调用 render 的过程就是一个拆箱的过程
+ function render(vnode: any, container: any,parentComponent:any) {
    //render内部是调用 patch 方法
    patch(vnode, container,parentComponent)
 }
+
+
 
 function patch(vnode: any, container: any,parentComponent:any) {
 
@@ -99,7 +108,7 @@ function mountElement(vnode: any, container: any,parentComponent: any) {
 
    //创建挂载元素
    //将创建的真实元素存储到虚拟节点的 el上
-   const el = (vnode.el = document.createElement(vnode.type))
+   const el = (vnode.el = hostCreateElement(vnode.type))
    const { children, shapeFlag } = vnode
    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children
@@ -110,20 +119,27 @@ function mountElement(vnode: any, container: any,parentComponent: any) {
    const { props } = vnode
    for (const key in props) {
       console.log(key);
-      const isOn = (key: string) => /^on[A-Z]/.test(key)
-      if (isOn(key)) {
-         const event = key.slice(2).toLocaleLowerCase()
-         el.addEventListener(event, props[key])
-      } else {
-         el.setAttribute(key, props[key])
-      }
+      const val = props[key];
+      hostPatchProp(el, key, val);
+      // const isOn = (key: string) => /^on[A-Z]/.test(key)
+      // if (isOn(key)) {
+      //    const event = key.slice(2).toLocaleLowerCase()
+      //    el.addEventListener(event, props[key])
+      // } else {
+      //    el.setAttribute(key, props[key])
+      // }
 
    }
-   container.appendChild(el)
+   hostInsert(el, container);
 }
 
 function mountChildren(vnode: any, container: any,parentComponent:any) {
    vnode.children.forEach((v: any) => {
       patch(v, container,parentComponent)
    })
+}
+
+return {
+   createApp: createAppAPI(render),
+ };
 }
