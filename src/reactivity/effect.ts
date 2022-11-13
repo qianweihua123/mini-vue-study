@@ -3,7 +3,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-22 21:23:39
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-01 15:49:45
+ * @LastEditTime: 2022-11-13 21:03:14
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -85,14 +85,17 @@ export function trigger(target: any, key: any) {
 }
 
 export function triggerEffects(dep: any) {
-    for (const effect of dep) {
+    debugger
+    // debugger
+    const effects = Array.from(dep)
+    effects.forEach((effect:any) => {
         if (effect.scheduler) {
             effect.scheduler()
         } else {
             effect.run()
         }
 
-    }
+    })
 }
 
 export function effect(fn: any, options: any = {}) { //effect是一个函数，内部去 new 一个类 ，类的内部保存了传入的函数，并且先调用下传入的函数

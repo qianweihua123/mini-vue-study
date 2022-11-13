@@ -2,10 +2,11 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:33:09
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-11 23:09:46
+ * @LastEditTime: 2022-11-13 21:23:11
  * @FilePath: /mini-vue-study/src/runtime-core/component.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
+import { proxyRefs } from "../reactivity"
 import { shallowReadonly } from "../reactivity/reactive"
 import { emit } from "./componentEmit"
 import { initProps } from "./componentProps"
@@ -38,6 +39,8 @@ export function createComponentInstance(vnode: any,parent:any) {
         slots:{},
         provides:parent? parent.provides:{},//存储在实例对象上
         parent,
+        isMounted: false,
+        subTree:{},
         emit:() => {}
     }
     // TODO:给 emit 去赋值
@@ -73,7 +76,7 @@ function setupStatefulComponent(instance: any) {
 }
 function handleSetupResult(instance: any, setupResult: any) {
     if (typeof setupResult === 'object') {
-        instance.setupState = setupResult
+        instance.setupState = proxyRefs(setupResult)
     }
     //保证存在 render
     finishComponentSetup(instance)
