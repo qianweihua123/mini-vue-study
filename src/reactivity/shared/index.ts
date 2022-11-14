@@ -2,7 +2,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-10-30 20:40:52
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-09 22:41:19
+ * @LastEditTime: 2022-11-14 16:35:53
  * @FilePath: /mini-vue-study/src/reactivity/shared/index.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -29,3 +29,6 @@ export const capitalize = (str: string) => {
 export const toHandlerKey = (str: string) => {
     return str ? "on" + capitalize(str) : ''
 }
+
+
+export const EMPTY_OBJ = {};
