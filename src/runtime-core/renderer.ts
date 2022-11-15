@@ -6,7 +6,7 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-14 16:47:19
+ * @LastEditTime: 2022-11-15 14:58:39
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -20,6 +20,8 @@ export function createRenderer(options: any) {
       createElement: hostCreateElement,
       patchProp: hostPatchProp,
       insert: hostInsert,
+      remove: hostRemove,
+      setElementText: hostSetElementText,
    } = options;
    //调用 render 的过程就是一个拆箱的过程
    function render(vnode: any, container: any, parentComponent: any) {
@@ -43,7 +45,6 @@ export function createRenderer(options: any) {
             processText(n1, n2, container)
             break
          default:
-            debugger
             if (shapeFlag & ShapeFlags.ELEMENT) {
                processElement(n1, n2, container, parentComponent)
             } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
@@ -57,7 +58,7 @@ export function createRenderer(options: any) {
       container.append(textNode)
    }
    function processFragment(n1: any, n2: any, container: any, parentComponent: any) {
-      mountChildren(n2, container, parentComponent)
+      mountChildren(n2.children, container, parentComponent)
    }
    function processComponent(n1: any, n2: any, container: any, parentComponent: any) {
       mountComponent(n2, container, parentComponent)
@@ -119,17 +120,49 @@ export function createRenderer(options: any) {
       if (!n1) {
          mountElement(n2, container, parentComponent)
       } else {
-         patchElement(n1, n2, container)
+         patchElement(n1, n2, container,parentComponent)
       }
    }
 
-   function patchElement(n1: any, n2: any, container: any) {
+   function patchElement(n1: any, n2: any, container: any,parentComponent:any) {
       //处理 props
       //处理 children
       const oldProps = n1.props || EMPTY_OBJ;
       const newProps = n2.props || EMPTY_OBJ;
       const el = (n2.el = n1.el)
       patchProps(el, oldProps, newProps)
+      patchChildren(n1, n2, el,parentComponent)
+   }
+
+   function patchChildren(n1: any, n2: any, container: any,parentComponent:any) {
+      const prevShapeFlag = n1.shapeFlag
+      const c1 = n1.children
+      const { shapeFlag } = n2;
+      const c2 = n2.children
+      //新的是文本，老的是数组
+      if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+         if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            //老数组清空，新的文本设置进去
+            unmountChildren(n1.children)
+         }
+
+         if (c1 !== c2) {
+            hostSetElementText(container, c2)
+         }
+
+      }else{
+         //新的是数组，移除老的文本，挂载子节点
+         if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            hostSetElementText(container, "");
+            mountChildren(c2, container, parentComponent);
+          }
+      }
+   }
+   function unmountChildren(children: any) {
+      for (let i = 0; i < children.length; i++) {
+         const el = children[i].el;
+         hostRemove(el);
+      }
    }
 
    function patchProps(el: any, oldProps: any, newProps: any) {
@@ -162,14 +195,14 @@ export function createRenderer(options: any) {
       if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
          el.textContent = children
       } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-         mountChildren(vnode, el, parentComponent)
+         mountChildren(vnode.children, el, parentComponent)
       }
 
       const { props } = vnode
       for (const key in props) {
          console.log(key);
          const val = props[key];
-         hostPatchProp(el, key,null, val);
+         hostPatchProp(el, key, null, val);
          // const isOn = (key: string) => /^on[A-Z]/.test(key)
          // if (isOn(key)) {
          //    const event = key.slice(2).toLocaleLowerCase()
@@ -182,8 +215,8 @@ export function createRenderer(options: any) {
       hostInsert(el, container);
    }
 
-   function mountChildren(vnode: any, container: any, parentComponent: any) {
-      vnode.children.forEach((v: any) => {
+   function mountChildren(children: any, container: any, parentComponent: any) {
+      children.forEach((v: any) => {
          patch(null, v, container, parentComponent)
       })
    }
