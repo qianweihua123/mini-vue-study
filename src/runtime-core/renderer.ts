@@ -6,7 +6,7 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-16 15:52:25
+ * @LastEditTime: 2022-11-16 16:07:42
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -221,6 +221,47 @@ export function createRenderer(options: any) {
             i++;
          }
       } else {
+         // 中间对比
+         let s1 = i;
+         let s2 = i;
+
+         const toBePatched = e2 - s2 + 1;
+         let patched = 0;
+         const keyToNewIndexMap = new Map();
+
+         for (let i = s2; i <= e2; i++) {
+            const nextChild = c2[i];
+            keyToNewIndexMap.set(nextChild.key, i);
+         }
+
+         for (let i = s1; i <= e1; i++) {
+            const prevChild = c1[i];
+
+            if (patched >= toBePatched) {
+               hostRemove(prevChild.el);
+               continue;
+            }
+
+            let newIndex;
+            if (prevChild.key != null) {
+               newIndex = keyToNewIndexMap.get(prevChild.key);
+            } else {
+               for (let j = s2; j < e2; j++) {
+                  if (isSomeVNodeType(prevChild, c2[j])) {
+                     newIndex = j;
+
+                     break;
+                  }
+               }
+            }
+
+            if (newIndex === undefined) {
+               hostRemove(prevChild.el);
+            } else {
+               patch(prevChild, c2[newIndex], container, parentComponent, null);
+               patched++;
+            }
+         }
       }
    }
 
