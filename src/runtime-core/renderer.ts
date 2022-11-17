@@ -6,7 +6,7 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-16 16:07:42
+ * @LastEditTime: 2022-11-17 11:18:26
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -176,7 +176,7 @@ export function createRenderer(options: any) {
       let e2 = l2 - 1;
 
       function isSomeVNodeType(n1: any, n2: any) {
-         return n1.type === n2.type && n1.key === n2.key;
+         return n1.type === n2.type && n1.props.key === n2.props.key;
       }
 
       while (i <= e1 && i <= e2) {
@@ -229,6 +229,11 @@ export function createRenderer(options: any) {
          let patched = 0;
          const keyToNewIndexMap = new Map();
 
+         const newIndexToOldIndexMap = new Array(toBePatched);
+         let moved = false;
+         let maxNewIndexSoFar = 0;
+         for (let i = 0; i < toBePatched; i++) newIndexToOldIndexMap[i] = 0;
+
          for (let i = s2; i <= e2; i++) {
             const nextChild = c2[i];
             keyToNewIndexMap.set(nextChild.key, i);
@@ -258,13 +263,82 @@ export function createRenderer(options: any) {
             if (newIndex === undefined) {
                hostRemove(prevChild.el);
             } else {
+               if (newIndex >= maxNewIndexSoFar) {
+                  maxNewIndexSoFar = newIndex;
+               } else {
+                  moved = true;
+               }
+               //有映射的情况我们就将下标放进去，但是可能有 0 的情况，没有意义，加 1
+               newIndexToOldIndexMap[newIndex - s2] = i + 1;
+               console.log(newIndexToOldIndexMap, 'newIndexToOldIndexMap');
+
                patch(prevChild, c2[newIndex], container, parentComponent, null);
                patched++;
             }
          }
+
+         const increasingNewIndexSequence = moved
+            ? getSequence(newIndexToOldIndexMap)
+            : [];
+         let j = increasingNewIndexSequence.length - 1;
+
+         for (let i = toBePatched - 1; i >= 0; i--) {
+            const nextIndex = i + s2;
+            const nextChild = c2[nextIndex];
+            const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+
+            if (newIndexToOldIndexMap[i] === 0) {
+               patch(null, nextChild, container, parentComponent, anchor);
+            } else if (moved) {
+               if (j < 0 || i !== increasingNewIndexSequence[j]) {
+                  hostInsert(nextChild.el, container, anchor);
+               } else {
+                  j--;
+               }
+            }
+         }
       }
    }
-
+   function getSequence(arr: any) {
+      const p = arr.slice();
+      const result = [0];
+      let i, j, u, v, c;
+      const len = arr.length;
+      for (i = 0; i < len; i++) {
+         const arrI = arr[i];
+         if (arrI !== 0) {
+            j = result[result.length - 1];
+            if (arr[j] < arrI) {
+               p[i] = j;
+               result.push(i);
+               continue;
+            }
+            u = 0;
+            v = result.length - 1;
+            while (u < v) {
+               c = (u + v) >> 1;
+               if (arr[result[c]] < arrI) {
+                  u = c + 1;
+               } else {
+                  v = c;
+               }
+            }
+            if (arrI < arr[result[u]]) {
+               if (u > 0) {
+                  p[i] = result[u - 1];
+               }
+               result[u] = i;
+            }
+         }
+      }
+      u = result.length;
+      v = result[u - 1];
+      while (u-- > 0) {
+         result[u] = v;
+         v = p[v];
+      }
+      return result;
+   }
 
    function unmountChildren(children: any) {
       for (let i = 0; i < children.length; i++) {
