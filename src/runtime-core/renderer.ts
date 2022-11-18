@@ -6,7 +6,7 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-18 14:46:03
+ * @LastEditTime: 2022-11-18 15:05:05
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -14,6 +14,7 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
 import { createComponentInstance, setupComponent } from "./component"
 import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
+import { queueJobs } from './scheduler';
 import { Fragment, Text } from './vnode';
 //此方法可以创建一个渲染器 ,这个 options 就是传入的相关平台元素的操作方法
 export function createRenderer(options: any) {
@@ -131,6 +132,10 @@ export function createRenderer(options: any) {
             instance.subTree = subTree
             //接下来在 patch 中加入更新的流程，之前都是初始化
             patch(prevSubTree, subTree, container, instance, anchor)
+         }
+      }, {
+         scheduler() {
+            queueJobs(instance.update);
          }
       })
 
