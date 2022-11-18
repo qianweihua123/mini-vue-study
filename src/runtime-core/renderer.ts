@@ -6,12 +6,13 @@ import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-03 10:19:35
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-17 11:18:26
+ * @LastEditTime: 2022-11-18 14:46:03
  * @FilePath: /mini-vue-study/src/runtime-core/renderer.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 
 import { createComponentInstance, setupComponent } from "./component"
+import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
 import { Fragment, Text } from './vnode';
 //此方法可以创建一个渲染器 ,这个 options 就是传入的相关平台元素的操作方法
@@ -61,11 +62,26 @@ export function createRenderer(options: any) {
       mountChildren(n2.children, container, parentComponent, anchor)
    }
    function processComponent(n1: any, n2: any, container: any, parentComponent: any, anchor: any) {
-      mountComponent(n2, container, parentComponent, anchor)
-   }
+      if (!n1) {
+         mountComponent(n2, container, parentComponent, anchor)
+      } else {
+         updateComponent(n1, n2)
+      }
 
+   }
+   function updateComponent(n1: any, n2: any) {
+      //先复用老的组件
+      const instance = (n2.component = n1.component);
+      if (shouldUpdateComponent(n1, n2)) {
+         instance.next = n2;//存储新的虚拟节点
+         instance.update();
+      } else {
+         n2.el = n1.el;
+         instance.vnode = n2;
+      }
+   }
    function mountComponent(initialVnode: any, container: any, parentComponent: any, anchor: any) {
-      const instance = createComponentInstance(initialVnode, parentComponent)
+      const instance = (initialVnode.component = createComponentInstance(initialVnode, parentComponent))
       setupComponent(instance) //上面这些都是把组件的信息收集起来
 
       //下面的这个是开箱得到虚拟节点树
@@ -83,7 +99,7 @@ export function createRenderer(options: any) {
           return h('div', 'hi,' +this.msg)
        }
       */
-      effect(() => {
+      instance.update = effect(() => {
          if (!instance.isMounted) {
             const { proxy } = instance;
             //在执行 render 的时候使用 call指向这个 proxy
@@ -101,10 +117,15 @@ export function createRenderer(options: any) {
             instance.isMounted = true
          } else {
             console.log('update');
-            const { proxy } = instance;
+            //vnode，指向之前的虚拟节点，next 是更新的虚拟节点
+            const { proxy, next, vnode } = instance;
             //在执行 render 的时候使用 call指向这个 proxy
             // console.log(proxy,'proxy',instance);
+            if (next) {
+               next.el = vnode.el //如果next 有值，复用老的 el
 
+               updateComponentPreRender(instance, next);//更新属性
+            }
             const subTree = instance.render && instance.render.call(proxy)
             const prevSubTree = instance.subTree
             instance.subTree = subTree
@@ -114,7 +135,12 @@ export function createRenderer(options: any) {
       })
 
    }
+   function updateComponentPreRender(instance: any, nextVNode: any) {
+      instance.vnode = nextVNode;
+      instance.next = null;
 
+      instance.props = nextVNode.props;
+   }
    function processElement(n1: any, n2: any, container: any, parentComponent: any, anchor: any) {
       //如果是元素节点那就初始化元素 mountElement(vnode, container)
       if (!n1) {
@@ -176,7 +202,7 @@ export function createRenderer(options: any) {
       let e2 = l2 - 1;
 
       function isSomeVNodeType(n1: any, n2: any) {
-         return n1.type === n2.type && n1.props.key === n2.props.key;
+         return n1.type === n2.type && n1.key === n2.key;
       }
 
       while (i <= e1 && i <= e2) {
@@ -251,7 +277,7 @@ export function createRenderer(options: any) {
             if (prevChild.key != null) {
                newIndex = keyToNewIndexMap.get(prevChild.key);
             } else {
-               for (let j = s2; j < e2; j++) {
+               for (let j = s2; j <= e2; j++) {
                   if (isSomeVNodeType(prevChild, c2[j])) {
                      newIndex = j;
 
