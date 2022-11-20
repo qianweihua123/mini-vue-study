@@ -2,7 +2,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-19 22:27:28
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-19 22:27:35
+ * @LastEditTime: 2022-11-20 10:01:14
  * @FilePath: /mini-vue-study/src/compiler-core/test/parse.spec.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -19,6 +19,18 @@ describe("Parse", () => {
                     type: NodeTypes.SIMPLE_EXPRESSION,
                     content: "message",
                 },
+            });
+        });
+    });
+
+
+    describe("element", () => {
+        it("simple element div", () => {
+            const ast = baseParse("<div></div>");
+
+            expect(ast.children[0]).toStrictEqual({
+                type: NodeTypes.ELEMENT,
+                tag: "div",
             });
         });
     });
