@@ -1,3 +1,11 @@
+/*
+ * @Author: qwh 15806293089@163.com
+ * @Date: 2022-11-19 22:27:51
+ * @LastEditors: qwh 15806293089@163.com
+ * @LastEditTime: 2022-11-21 20:31:27
+ * @FilePath: /mini-vue-study/src/compiler-core/src/parse.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { NodeTypes } from "./ast";
 const enum TagType {
     Start,
@@ -21,10 +29,32 @@ function parseChildren(context: any) {
             node = parseElement(context);
         }
     }
+    if (!node) {//如果 node 没有值的话，就是 text 节点
+        node = parseText(context);
+    }
 
     nodes.push(node);
 
     return nodes;
+}
+
+function parseText(context: any) {
+    // 1. 获取content 抽离了parseTextData函数
+    const content = parseTextData(context, context.source.length);
+
+    return {
+        type: NodeTypes.TEXT,
+        content,
+    };
+}
+
+function parseTextData(context: any, length: any) {
+    //获取当前的内容
+    const content = context.source.slice(0, length);
+
+    // 2. 推进text 文本的长度
+    advanceBy(context, length);
+    return content;
 }
 function parseElement(context: any) {
     const element = parseTag(context, TagType.Start);
@@ -66,7 +96,7 @@ function parseInterpolation(context: any) {
 
     const rawContentLength = closeIndex - openDelimiter.length;
 
-    const rawContent = context.source.slice(0, rawContentLength);
+    const rawContent = parseTextData(context, rawContentLength);
     const content = rawContent.trim()
 
     advanceBy(context, rawContentLength + closeDelimiter.length);
