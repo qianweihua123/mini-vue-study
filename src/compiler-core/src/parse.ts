@@ -2,7 +2,7 @@
  * @Author: qwh 15806293089@163.com
  * @Date: 2022-11-19 22:27:51
  * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-21 20:31:27
+ * @LastEditTime: 2022-11-22 14:07:29
  * @FilePath: /mini-vue-study/src/compiler-core/src/parse.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -13,34 +13,66 @@ const enum TagType {
 }
 export function baseParse(content: string) {
     const context = createParserContext(content);
-    return createRoot(parseChildren(context));
+    return createRoot(parseChildren(context, []));
 }
 
-function parseChildren(context: any) {
+function parseChildren(context: any, ancestors: any) {
     const nodes: any = [];
+    while (!isEnd(context, ancestors)) {
+        let node;
 
-    let node;
+        const s = context.source;
+        if (s.startsWith("{{")) {
+            node = parseInterpolation(context);
+        } else if (s[0] === '<') {
+            if (/[a-z]/i.test(s[1])) {
+                node = parseElement(context, ancestors);
+            }
+        }
+        if (!node) {//如果 node 没有值的话，就是 text 节点
+            node = parseText(context);
+        }
 
-    const s = context.source;
-    if (s.startsWith("{{")) {
-        node = parseInterpolation(context);
-    } else if (s[0] === '<') {
-        if (/[a-z]/i.test(s[1])) {
-            node = parseElement(context);
+        nodes.push(node);
+
+        return nodes;
+    }
+}
+
+function isEnd(context: any, ancestors: any) {
+    //遇到结束标签
+    const s = context.source
+    if (s.startsWith("</")) {
+        for (let i = ancestors.length - 1; i >= 0; i--) {
+            const tag = ancestors[i].tag;
+            if (startsWithEndTagOpen(s, tag)) {
+                return true;
+            }
         }
     }
-    if (!node) {//如果 node 没有值的话，就是 text 节点
-        node = parseText(context);
-    }
+    return !s //没有值的时候结束
+}
 
-    nodes.push(node);
-
-    return nodes;
+function startsWithEndTagOpen(source: any, tag: any) {
+    return (
+        source.startsWith("</") &&
+        source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase()
+    );
 }
 
 function parseText(context: any) {
+    //处理联合类型的时候如果截取文本的时候遇到{{括号，就停止
+    let endIndex = context.source.length
+    let endTokens = ["<", "{{"]
+    for (let i = 0; i < endTokens.length; i++) {
+        const index = context.source.indexOf(endTokens[i])
+        if (index !== -1 && endIndex > index) {
+            //如果找到了{{，那就改变 ednIndex
+            endIndex = index
+        }
+    }
     // 1. 获取content 抽离了parseTextData函数
-    const content = parseTextData(context, context.source.length);
+    const content = parseTextData(context, endIndex);
 
     return {
         type: NodeTypes.TEXT,
@@ -56,10 +88,17 @@ function parseTextData(context: any, length: any) {
     advanceBy(context, length);
     return content;
 }
-function parseElement(context: any) {
-    const element = parseTag(context, TagType.Start);
-
-    parseTag(context, TagType.End);
+function parseElement(context: any, ancestors: any) {
+    const element: any = parseTag(context, TagType.Start);
+    ancestors.push(element)
+    element.children = parseChildren(context, ancestors)
+    ancestors.pop()
+    //如果头尾标签能对上，才去推进
+    if (startsWithEndTagOpen(context.source, element.tag)) {
+        parseTag(context, TagType.End);
+    } else {
+        throw new Error(`缺少结束标签:${element.tag}`);
+    }
 
     return element;
 }
