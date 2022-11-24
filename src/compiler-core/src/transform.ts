@@ -1,3 +1,5 @@
+import { NodeTypes } from "./ast";
+import { TO_DISPLAY_STRING } from "./runtimeHelpers";
 export function transform(root: any, options: any) {
     //这里传入的 options 就是在外部定义了如何转换
     // transform(ast, {
@@ -7,12 +9,18 @@ export function transform(root: any, options: any) {
     const context = createTransformContext(root, options);
     //遍历 ast 语法树
     traverseNode(root, context);
+
+    root.helpers = [...context.helpers.keys()];
 }
 
 function createTransformContext(root: any, options: any): any {
     const context = {
         root,
         nodeTransforms: options.nodeTransforms || [],
+        helpers: new Map(),
+        helper(key: any) {
+            context.helpers.set(key, 1);
+        },
     };
 
     return context;
@@ -26,6 +34,18 @@ function traverseNode(node: any, context: any) {
         //拿到转换方法，传入节点去转换
         transform(node);
     }
+    switch (node.type) {
+        case NodeTypes.INTERPOLATION:
+            context.helper(TO_DISPLAY_STRING);
+            break;
+        case NodeTypes.ROOT:
+        case NodeTypes.ELEMENT:
+            traverseChildren(node, context);
+            break;
+
+        default:
+            break;
+    }
 
     //如果有子节点，那就继续去调用traverseNode。这里面就会递归调用
     traverseChildren(node, context);
@@ -33,10 +53,10 @@ function traverseNode(node: any, context: any) {
 function traverseChildren(node: any, context: any) {
     const children = node.children;
 
-    if (children) {
-        for (let i = 0; i < children.length; i++) {
-            const node = children[i];
-            traverseNode(node, context);
-        }
+    // if (children) {
+    for (let i = 0; i < children.length; i++) {
+        const node = children[i];
+        traverseNode(node, context);
     }
+    // }
 }
