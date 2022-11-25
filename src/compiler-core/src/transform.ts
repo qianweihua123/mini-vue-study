@@ -13,6 +13,14 @@ export function transform(root: any, options: any) {
     root.helpers = [...context.helpers.keys()];
 }
 
+function createRootCodegen(root: any) {
+    const child = root.children[0];
+    if (child.type === NodeTypes.ELEMENT) {
+        root.codegenNode = child.codegenNode;
+    } else {
+        root.codegenNode = root.children[0];
+    }
+}
 function createTransformContext(root: any, options: any): any {
     const context = {
         root,
@@ -28,11 +36,13 @@ function createTransformContext(root: any, options: any): any {
 
 function traverseNode(node: any, context: any) {
     const nodeTransforms = context.nodeTransforms;
+    const exitFns: any = [];
     for (let i = 0; i < nodeTransforms.length; i++) {
         //取出外部传入的转换方法，传入的是一个数组，然后每项都可以去转换节点
         const transform = nodeTransforms[i];
         //拿到转换方法，传入节点去转换
-        transform(node);
+        const onExit = transform(node, context);
+        if (onExit) exitFns.push(onExit);
     }
     switch (node.type) {
         case NodeTypes.INTERPOLATION:
@@ -46,9 +56,13 @@ function traverseNode(node: any, context: any) {
         default:
             break;
     }
+    let i = exitFns.length;
+    while (i--) {
+        exitFns[i]();
+    }
 
     //如果有子节点，那就继续去调用traverseNode。这里面就会递归调用
-    traverseChildren(node, context);
+    // traverseChildren(node, context);
 }
 function traverseChildren(node: any, context: any) {
     const children = node.children;
