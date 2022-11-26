@@ -18,25 +18,25 @@ export function baseParse(content: string) {
 
 function parseChildren(context: any, ancestors: any) {
     const nodes: any = [];
+
     while (!isEnd(context, ancestors)) {
         let node;
-
         const s = context.source;
         if (s.startsWith("{{")) {
             node = parseInterpolation(context);
-        } else if (s[0] === '<') {
+        } else if (s[0] === "<") {
             if (/[a-z]/i.test(s[1])) {
                 node = parseElement(context, ancestors);
             }
         }
-        if (!node) {//如果 node 没有值的话，就是 text 节点
+
+        if (!node) {
             node = parseText(context);
         }
 
         nodes.push(node);
-
-        return nodes;
     }
+    return nodes;
 }
 
 function isEnd(context: any, ancestors: any) {
@@ -62,16 +62,17 @@ function startsWithEndTagOpen(source: any, tag: any) {
 
 function parseText(context: any) {
     //处理联合类型的时候如果截取文本的时候遇到{{括号，就停止
-    let endIndex = context.source.length
-    let endTokens = ["<", "{{"]
+    let endIndex = context.source.length;
+    let endTokens = ["<", "{{"];
+
     for (let i = 0; i < endTokens.length; i++) {
-        const index = context.source.indexOf(endTokens[i])
+        const index = context.source.indexOf(endTokens[i]);
         if (index !== -1 && endIndex > index) {
             //如果找到了{{，那就改变 ednIndex
-            endIndex = index
+            endIndex = index;
         }
     }
-    // 1. 获取content 抽离了parseTextData函数
+
     const content = parseTextData(context, endIndex);
 
     return {
@@ -79,6 +80,7 @@ function parseText(context: any) {
         content,
     };
 }
+
 
 function parseTextData(context: any, length: any) {
     //获取当前的内容
@@ -88,12 +90,12 @@ function parseTextData(context: any, length: any) {
     advanceBy(context, length);
     return content;
 }
+
 function parseElement(context: any, ancestors: any) {
     const element: any = parseTag(context, TagType.Start);
-    ancestors.push(element)
-    element.children = parseChildren(context, ancestors)
-    ancestors.pop()
-    //如果头尾标签能对上，才去推进
+    ancestors.push(element);
+    element.children = parseChildren(context, ancestors);
+    ancestors.pop();
     if (startsWithEndTagOpen(context.source, element.tag)) {
         parseTag(context, TagType.End);
     } else {
@@ -109,7 +111,7 @@ function parseTag(context: any, type: TagType) {
     //解析完后使用 advanceBy去移动，去除已经完成的代码
     const match: any = /^<\/?([a-z]*)/i.exec(context.source);
     const tag = match[1];
-    advanceBy(context, match[0].length);//删除已经处理好的代码
+    advanceBy(context, match[0].length););//删除已经处理好的代码
     advanceBy(context, 1);
 
     if (type === TagType.End) return;
@@ -122,7 +124,6 @@ function parseTag(context: any, type: TagType) {
 
 function parseInterpolation(context: any) {
     // {{message}}
-
     const openDelimiter = "{{";
     const closeDelimiter = "}}";
 
@@ -136,9 +137,10 @@ function parseInterpolation(context: any) {
     const rawContentLength = closeIndex - openDelimiter.length;
 
     const rawContent = parseTextData(context, rawContentLength);
-    const content = rawContent.trim()
 
-    advanceBy(context, rawContentLength + closeDelimiter.length);
+    const content = rawContent.trim();
+
+    advanceBy(context, closeDelimiter.length);
 
     return {
         type: NodeTypes.INTERPOLATION,

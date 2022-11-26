@@ -106,7 +106,7 @@ export function createRenderer(options: any) {
             //在执行 render 的时候使用 call指向这个 proxy
             // console.log(proxy,'proxy',instance);
 
-            const subTree = instance.subTree = instance.render && instance.render.call(proxy)
+            const subTree = instance.subTree = instance.render && instance.render.call(proxy, proxy)
             // vnode -> patch
             //vnode -> element -> mountElement
             patch(null, subTree, container, instance, anchor)
@@ -127,7 +127,7 @@ export function createRenderer(options: any) {
 
                updateComponentPreRender(instance, next);//更新属性
             }
-            const subTree = instance.render && instance.render.call(proxy)
+            const subTree = instance.render && instance.render.call(proxy, proxy)
             const prevSubTree = instance.subTree
             instance.subTree = subTree
             //接下来在 patch 中加入更新的流程，之前都是初始化

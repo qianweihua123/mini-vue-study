@@ -34,10 +34,10 @@ export function generate(ast: any) {
     };
 }
 
-function genFunctionPreamble(ast: any, context: any) {
+function genFunctionPreamble(ast, context) {
     const { push } = context;
     const VueBinging = "Vue";
-    const aliasHelper = (s: any) => `${helperMapName[s]}:_${helperMapName[s]}`;
+    const aliasHelper = (s) => `${helperMapName[s]}:_${helperMapName[s]}`;
     if (ast.helpers.length > 0) {
         push(
             `const { ${ast.helpers.map(aliasHelper).join(", ")} } = ${VueBinging}`
@@ -53,14 +53,16 @@ function createCodegenContext(): any {
         push(source: any) {
             context.code += source;
         },
+        helper(key: any) {
+            return `_${helperMapName[key]}`;
+        },
     };
 
-    return context
+    return context;
 }
 
 function genNode(node: any, context: any) {
-    // const { push } = context;
-    // push(`'${node.content}'`);
+    debugger
     switch (node.type) {
         case NodeTypes.TEXT:
             genText(node, context);
@@ -77,6 +79,7 @@ function genNode(node: any, context: any) {
         case NodeTypes.COMPOUND_EXPRESSION:
             genCompoundExpression(node, context);
             break;
+
         default:
             break;
     }
@@ -94,6 +97,7 @@ function genCompoundExpression(node: any, context: any) {
     }
 }
 function genElement(node: any, context: any) {
+    debugger
     const { push, helper } = context;
     const { tag, children, props } = node;
     push(`${helper(CREATE_ELEMENT_VNODE)}(`);

@@ -1,6 +1,7 @@
 import { NodeTypes } from "./ast";
 import { TO_DISPLAY_STRING } from "./runtimeHelpers";
 export function transform(root: any, options: any) {
+    // debugger
     //这里传入的 options 就是在外部定义了如何转换
     // transform(ast, {
     //     nodeTransforms: [plugin],
@@ -9,6 +10,8 @@ export function transform(root: any, options: any) {
     const context = createTransformContext(root, options);
     //遍历 ast 语法树
     traverseNode(root, context);
+
+    createRootCodegen(root)
 
     root.helpers = [...context.helpers.keys()];
 }
