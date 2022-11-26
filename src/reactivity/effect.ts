@@ -7,7 +7,7 @@
  * @FilePath: /mini-vue-study/src/reactivity/effect.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import { extend } from "./shared";
+import { extend } from "../shared";
 
 let activeEffect: any;
 let shouldTrack: any
@@ -86,7 +86,7 @@ export function trigger(target: any, key: any) {
 
 export function triggerEffects(dep: any) {
     const effects = Array.from(dep)
-    effects.forEach((effect:any) => {
+    effects.forEach((effect: any) => {
         if (effect.scheduler) {
             effect.scheduler()
         } else {

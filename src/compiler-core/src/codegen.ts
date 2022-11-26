@@ -1,4 +1,4 @@
-import { isString } from "../../reactivity/shared";
+import { isString } from "../../shared";
 import { NodeTypes } from "./ast";
 import {
     CREATE_ELEMENT_VNODE,
@@ -62,7 +62,7 @@ function createCodegenContext(): any {
 }
 
 function genNode(node: any, context: any) {
-    debugger
+    // debugger
     switch (node.type) {
         case NodeTypes.TEXT:
             genText(node, context);
@@ -97,7 +97,7 @@ function genCompoundExpression(node: any, context: any) {
     }
 }
 function genElement(node: any, context: any) {
-    debugger
+    // debugger
     const { push, helper } = context;
     const { tag, children, props } = node;
     push(`${helper(CREATE_ELEMENT_VNODE)}(`);

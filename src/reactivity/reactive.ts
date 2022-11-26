@@ -9,38 +9,38 @@
 
 import { mutableHandles, readonlHandlers, shallowReadonlHandlers } from './baseHandlers'
 import { track, trigger } from './effect'
-import { isObject } from './shared/index'
-export const enum ReactiveFlags{
+import { isObject } from '../shared/index'
+export const enum ReactiveFlags {
     IS_REACTIVE = '__v_isReactive',
     IS_READONLY = '__v_isReadOnly',
 }
 export function reactive(raw: any) {
-    return createActiveObject(raw,mutableHandles)
+    return createActiveObject(raw, mutableHandles)
 }
 //当我们使用 isReactive的时候，我们去触发传入对象上的 get
-export function isReactive(value:any){
-      return !!value[ReactiveFlags.IS_REACTIVE]
+export function isReactive(value: any) {
+    return !!value[ReactiveFlags.IS_REACTIVE]
 }
-export function isReadonly(value:any){
+export function isReadonly(value: any) {
     return !!value[ReactiveFlags.IS_READONLY]
 }
 
-export function isProxy(value:any){
-   return isReactive(value) || isReadonly(value)
+export function isProxy(value: any) {
+    return isReactive(value) || isReadonly(value)
 }
 
 export function readonly(raw: any) {
-    return createActiveObject(raw,readonlHandlers)
+    return createActiveObject(raw, readonlHandlers)
 }
 
-export function shallowReadonly(raw:any){
-    return createActiveObject(raw,shallowReadonlHandlers)
+export function shallowReadonly(raw: any) {
+    return createActiveObject(raw, shallowReadonlHandlers)
 }
 
-function createActiveObject(raw:any,baseHandlers:any){
+function createActiveObject(raw: any, baseHandlers: any) {
     if (!isObject(raw)) {
         console.warn(`target ${raw} 必须是一个对象`);
         return raw
-      }
-     return new Proxy(raw,baseHandlers)
+    }
+    return new Proxy(raw, baseHandlers)
 }

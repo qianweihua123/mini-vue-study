@@ -1,4 +1,4 @@
-import { ShapeFlags } from "../reactivity/shared/ShapeFlags";
+import { ShapeFlags } from "../shared/ShapeFlags";
 
 /*
  * @Author: qwh 15806293089@163.com
@@ -12,8 +12,8 @@ export function initSolts(instance: any, children: any) {
     // instance.slots = Array.isArray(children) ? children : [children]
     const { vnode } = instance;
     if (vnode.shapeFlag & ShapeFlags.SLOT_CHILDREN) {
-        normalizeObjectSlots(children,instance.slots)
-    }else{
+        normalizeObjectSlots(children, instance.slots)
+    } else {
         instance.slots = {};
     }
 
@@ -21,10 +21,10 @@ export function initSolts(instance: any, children: any) {
 
 function normalizeObjectSlots(children: any, slots: any) {
     for (const key in children) {
-        slots[key] = (props:any) => normalizeSlotValue(children[key](props))
+        slots[key] = (props: any) => normalizeSlotValue(children[key](props))
     }
 }
 
 function normalizeSlotValue(value: any) {
-   return Array.isArray(value) ? value : [value]
+    return Array.isArray(value) ? value : [value]
 }

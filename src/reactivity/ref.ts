@@ -9,7 +9,7 @@
 
 import { isTracking, trackEffect, triggerEffects } from "./effect"
 import { reactive } from "./reactive"
-import { hasChanged, isObject } from "./shared"
+import { hasChanged, isObject } from "../shared"
 
 class RefImpl {
     _value = ''

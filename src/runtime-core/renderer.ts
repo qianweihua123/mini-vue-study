@@ -1,6 +1,6 @@
 import { effect } from '../reactivity/effect';
-import { ShapeFlags } from '../reactivity/shared/ShapeFlags';
-import { EMPTY_OBJ, isObject } from './../reactivity/shared/index';
+import { ShapeFlags } from '../shared/ShapeFlags';
+import { EMPTY_OBJ, isObject } from '../shared/index';
 
 /*
  * @Author: qwh 15806293089@163.com

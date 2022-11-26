@@ -22,5 +22,5 @@ export { createRenderer } from "./renderer";
 
 export { nextTick } from "./scheduler";
 
-export { toDisplayString } from "../reactivity/shared";
+export { toDisplayString } from "../shared";
 export * from "../reactivity";
