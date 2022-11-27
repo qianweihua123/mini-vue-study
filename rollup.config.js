@@ -10,20 +10,20 @@ import typescript from '@rollup/plugin-typescript';
 // const1 typescript = require('@rollup/plugin-typescript')
 
 export default {
-    input: './src/index.ts' ,//入口
-    output:[
+    input: './packages/vue/src/index.ts', //入口
+    output: [
         //出口
         //cjs esm
         {
-            format:'cjs',
-            file:"lib/mini-vue-study.cjs.js"//pkg.main
+            format: 'cjs',
+            file: "packages/vue/dist/mini-vue-study.cjs.js" //pkg.main
         },
         {
-            format:'es',
-            file: "lib/mini-vue-study.esm.js"//pkg.module
+            format: 'es',
+            file: "packages/vue/dist/mini-vue-study.esm.js" //pkg.module
         }
     ],
-    plugins:[
+    plugins: [
         typescript()
     ]
 }

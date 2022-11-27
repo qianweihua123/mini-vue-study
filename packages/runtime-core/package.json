@@ -1,0 +1,16 @@
+{
+	"name": "@mini-vue-study/runtime-core",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@mini-vue-study/reactivity": "workspace:^1.0.0",
+		"@mini-vue-study/shared": "workspace:^1.0.0"
+	}
+}
