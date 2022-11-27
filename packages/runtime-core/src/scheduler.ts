@@ -1,17 +1,12 @@
-/*
- * @Author: qwh 15806293089@163.com
- * @Date: 2022-11-18 14:59:49
- * @LastEditors: qwh 15806293089@163.com
- * @LastEditTime: 2022-11-18 15:08:36
- * @FilePath: /mini-vue-study/src/runtime-core/scheduler.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
+
 const queue: any[] = [];
+//此数组收集之前的队列
+const activePreFlushCbs: any[] = [];
 
 const p = Promise.resolve();
 let isFlushPending = false;
 
-export function nextTick(fn: any) {
+export function nextTick(fn?) {
     return fn ? p.then(fn) : p;
 }
 
@@ -19,6 +14,11 @@ export function queueJobs(job: any) {
     if (!queue.includes(job)) {
         queue.push(job);
     }
+
+    queueFlush();
+}
+export function queuePreFlushCb(job: any) {
+    activePreFlushCbs.push(job);
 
     queueFlush();
 }
@@ -33,8 +33,16 @@ function queueFlush() {
 function flushJobs() {
     //执行微任务的时候关闭开关先
     isFlushPending = false;
+    //在执行之前，此处去调用之前的队列，针对 watcheffect 这是针对组件渲染前调用的
+    flushPreFlushCbs();
     let job;
     while ((job = queue.shift())) {
         job && job();
+    }
+}
+
+function flushPreFlushCbs() {
+    for (let i = 0; i < activePreFlushCbs.length; i++) {
+        activePreFlushCbs[i]();
     }
 }
